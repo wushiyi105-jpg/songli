@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "songli"
+version = "0.1.0"
+description = "人情送礼 Agent —— 三套方案、禁忌校验、撞礼检查、话术"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+[project.scripts]
+songli = "songli.cli:main"
+
+[tool.setuptools]
+packages = ["songli"]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

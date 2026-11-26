@@ -177,7 +177,7 @@ python -m unittest discover tests -v
 
 ## 👤 Author
 
-shiyi · GitHub [@wushiyi105-jpg](https://github.com/wushiyi105-jpg) · [wushiyi105@gmail.com](mailto:wushiyi105@gmail.com)
+Luo Zhizhi · 15071889700
 
 ## 📄 License
 

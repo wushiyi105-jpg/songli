@@ -4,10 +4,12 @@
 def risks(base):
     out = []
     brief = base["brief"]
+    if base.get("note"):
+        out.append(base["note"])
     if not brief.get("budget"):
         out.append("没写预算,方案按关系与场合挑,价位可能超出预期。")
     if not brief.get("relation"):
-        out.append("没写送给谁,关系决定价位与话术,建议补一句。")
+        out.append("没写关系类别(父母 / 长辈 / 伴侣 / 朋友 / 同事 / 领导 / 客户 / 孩子 / 老师),话术按通用口径。")
     if not brief.get("occasion"):
         out.append("没写场合,同样的礼物在生日和探病是两回事。")
     for t in base["taboos"]:

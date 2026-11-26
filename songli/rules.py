@@ -10,6 +10,20 @@ _CACHE = {}
 RELATIONS = ["父母", "长辈", "伴侣", "朋友", "同事", "领导", "客户", "孩子", "老师"]
 OCCASIONS = ["生日", "婚礼", "乔迁", "满月", "节日", "探病", "毕业", "职场", "纪念日", "感谢"]
 
+# 口语里的称呼:命中这些词就归到对应关系类别,不然会判成「没写送给谁」
+SYNONYMS = (
+    ("父母", ("爸爸", "妈妈", "爸妈", "父亲", "母亲", "老爹", "老妈")),
+    ("长辈", ("爷爷", "奶奶", "外公", "外婆", "姥姥", "姥爷", "叔叔", "阿姨",
+              "舅舅", "姑姑", "伯伯", "岳父", "岳母")),
+    ("伴侣", ("老公", "老婆", "对象", "男朋友", "女朋友", "爱人", "男友", "女友")),
+    ("朋友", ("闺蜜", "好友", "同学", "兄弟", "姐妹", "室友")),
+    ("同事", ("同组", "组里", "搭档")),
+    ("领导", ("老板", "上司", "主管")),
+    ("客户", ("甲方", "供应商")),
+    ("孩子", ("儿子", "女儿", "外甥", "外甥女", "侄子", "侄女", "孙子", "孙女", "小朋友")),
+    ("老师", ("教授", "班主任", "导师")),
+)
+
 TIMING = {
     "生日": "当天送到,或提前一天;不要迟到后补,补送要单独说明",
     "婚礼": "提前一周送到新房,当天只带红包与祝福",
@@ -54,11 +68,36 @@ def taboo_rules():
 
 
 BUDGET_RE = re.compile(r"(?:预算|大概|差不多)?\s*(\d{2,6})\s*(?:元|块)?(?:\s*[-–~到]\s*(\d{2,6}))?")
+ZH_BUDGET_RE = re.compile(r"(?:预算|大概|差不多|约)\s*([一二两三四五六七八九十百千万]+)\s*(?:元|块)?|([一二两三四五六七八九十百千万]+)\s*(?:元|块)")
+_ZH_DIGITS = {"零": 0, "一": 1, "二": 2, "两": 2, "三": 3, "四": 4,
+              "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+_ZH_UNITS = {"十": 10, "百": 100, "千": 1000, "万": 10000}
+
+
+def zh_number(s):
+    """中文数字转整数:「五百」→500、「一千二」→1200、「两百五」→250。"""
+    total, cur, last_unit = 0, 0, None
+    for ch in s or "":
+        if ch in _ZH_DIGITS:
+            cur = _ZH_DIGITS[ch]
+        elif ch in _ZH_UNITS:
+            unit = _ZH_UNITS[ch]
+            if unit == 10000:
+                total = (total + cur) * 10000 if (total + cur) else 10000
+            else:
+                total += (cur or 1) * unit
+            cur, last_unit = 0, unit
+    if cur:
+        # 「一百五」「一千二」这类省略说法:末位数字按上一个单位的十分之一算
+        total += cur * (last_unit // 10) if last_unit and last_unit >= 100 else cur
+    return total
 
 
 def parse(text):
     low = text or ""
     relation = next((r for r in RELATIONS if r in low), None)
+    if not relation:
+        relation = next((cat for cat, words in SYNONYMS if any(w in low for w in words)), None)
     occasion = next((o for o in OCCASIONS if o in low), None)
     m = None
     for cand in BUDGET_RE.finditer(low):
@@ -68,6 +107,12 @@ def parse(text):
     budget = None
     if m:
         budget = int(m.group(2) or m.group(1))
+    else:
+        for cand in ZH_BUDGET_RE.finditer(low):
+            value = zh_number(cand.group(1) or cand.group(2))
+            if value >= 50:
+                budget = value
+                break
     allergies = [w for w in ("过敏", "不吃", "忌口", "素食", "清真", "不喝酒", "不抽烟") if w in low]
     interests = [w for w in ("茶", "咖啡", "书", "运动", "香", "花", "手作", "数码", "做饭") if w in low]
     return {"relation": relation, "occasion": occasion, "budget": budget,
@@ -80,6 +125,13 @@ def split_budget(budget):
     main = int(round(budget * 0.8 / 10) * 10)
     flower = int(round(budget * 0.12 / 10) * 10)
     card = max(5, int(round(budget * 0.04)))
+    if main + flower + card > budget:
+        # 预算太小:先砍花,再砍卡,最后主礼兜底,四格不允许出现负数
+        flower = max(0, budget - main - card)
+        if main + flower + card > budget:
+            card = max(0, budget - main)
+        if main + flower + card > budget:
+            main = max(0, budget - flower - card)
     wrap = budget - main - flower - card
     return {"main": main, "flower": flower, "card": card, "wrap": wrap, "total": budget}
 
@@ -150,6 +202,12 @@ def schemes(brief, sent=None, limit=3):
     candidates = pool(relation, occasion, budget, sent, brief.get("interests"))
     if not candidates:
         candidates = pool(relation, occasion, None, sent, brief.get("interests"))
+    if not candidates:
+        # 场合在池里没有对应品类(比如满月):退回按关系与预算挑,别给出空方案
+        candidates = (pool(relation, None, budget, sent, brief.get("interests"))
+                      or pool(relation, None, None, sent, brief.get("interests")))
+    if not candidates:
+        candidates = pool(None, None, budget, sent, brief.get("interests"))
     scored = sorted(candidates, key=lambda g: (-score(g, relation, occasion, budget), g["low"]))
     picked = []
     used_cat = set()
@@ -197,6 +255,12 @@ def scripts(brief):
 
 def check(brief, sent=None, text=None):
     picked = schemes(brief, sent)
+    note = None
+    if not picked:
+        note = "礼物池里没有同时满足关系、场合与预算的品类,先把预算或场合放宽一条。"
+    elif brief.get("occasion") and not pool(None, brief["occasion"], None):
+        note = ("礼物池里还没有「%s」场合的对应品类,方案按关系与预算挑,"
+                "时机与话术仍按场合给。" % brief["occasion"])
     return {
         "brief": brief,
         "split": split_budget(brief.get("budget")),
@@ -206,4 +270,5 @@ def check(brief, sent=None, text=None):
         "timing": timing(brief),
         "scripts": scripts(brief),
         "sent_filtered": sorted(set(sent or [])),
+        "note": note,
     }

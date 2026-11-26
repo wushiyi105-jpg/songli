@@ -45,6 +45,8 @@ def render(r):
             lines.append("  · %s —— %s;替代:%s" % (t["name"], t["reason"], t["alt"]))
         lines.append("")
     lines.append("🎯 三套方案")
+    if not r["schemes"]:
+        lines.append("  " + (r.get("note") or "没有符合条件的礼物,先把预算或场合放宽一条。"))
     for i, g in enumerate(r["schemes"], 1):
         lines.append("  %d. %s(%s,%d–%d 元)" % (i, g["name"], g["category"], g["low"], g["high"]))
         lines.append("     理由:" + g["reason"])

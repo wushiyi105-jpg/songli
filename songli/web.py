@@ -121,11 +121,15 @@ def _handler(cfg, force_mock, db_path):
                 self._json({"error": "not found"}, 404)
 
         def do_POST(self):
+            try:
+                body = self._read()
+            except ValueError:
+                self._json({"error": "请求体不是合法 JSON"}, 400)
+                return
             if urlparse(self.path).path != "/api/plan":
                 self._json({"error": "not found"}, 404)
                 return
             try:
-                body = self._read()
                 db.use(db_path)
                 text = body.get("text", "")
                 recipient = body.get("recipient") or (rules.parse(text).get("relation") or "")
@@ -136,8 +140,8 @@ def _handler(cfg, force_mock, db_path):
                 self._json(r)
             except llm.LLMError as e:
                 self._json({"error": str(e)}, 400)
-            except Exception as e:  # noqa: BLE001
-                self._json({"error": str(e)}, 500)
+            except Exception:  # noqa: BLE001
+                self._json({"error": "服务器内部错误"}, 500)
 
         def log_message(self, *args):
             pass

@@ -36,6 +36,10 @@ Docker:
 ```bash
 docker build -t songli .
 docker run -p 8000:8000 songli
+
+# 或者直接用镜像(多架构,amd64 / arm64)
+docker pull ghcr.io/wushiyi105-jpg/songli:latest
+docker run -p 8000:8000 ghcr.io/wushiyi105-jpg/songli:latest
 ```
 
 ## 🤔 为什么不用通用大模型直接问
@@ -54,6 +58,23 @@ docker run -p 8000:8000 songli
 - **客户节日**:预算 800,避开现金、酒、奢侈品,话术按商务口径。
 - **孩子满月**:避开毛绒与硬质玩具,优先棉品并确认材质。
 - **探病**:先问护士站能不能带花,再决定水果还是别的。
+
+## 📂 真实示例
+
+`examples/` 里是 4 份真实需求原话和对应输出,来源写在 `cases.json`:
+
+| 输入 | 出处 | 该看到什么 |
+|---|---|---|
+| case-01 | 家里微信群原话,外婆生日,预算「五百」 | 中文预算要认出 500;「外婆」归到长辈;「她不喝酒」命中酒类禁忌 |
+| case-02 | 同事在部门群说乔迁请客 | 时钟、刀具两条禁忌都要命中,三套方案里不该出现钟或刀 |
+| case-03 | 家里群转来的探视安排,预算 300,想带花 | 预算拆分合计 300;关系认「舅舅」 |
+| case-04 | 表姐报满月酒,特意提了毛绒过敏 | 池里还没有满月品类,方案按关系挑,风险里要明说这件事 |
+
+```bash
+for f in examples/case-*.txt; do python -m songli --mock plan --file "$f"; done
+```
+
+输出存档在 `examples/out/case-01..04.md`,和命令行逐字一致。
 
 ## 🗺 Roadmap
 
@@ -163,7 +184,10 @@ songli/
 │   └── web.py      # 单页 + JSON API
 ├── data/gifts.json     # 200 条礼物池
 ├── data/taboos.json    # 31 条禁忌规则
-├── tests/test_songli.py
+├── examples/           # 4 份真实需求 + 存档输出(cases.json 记来源)
+├── docs/regression-map.md  # issue → 测试名对照
+├── tests/test_songli.py       # 28 条单测
+├── tests/test_integration.py  # 31 条集成(HTTP / CLI / 示例结论)
 └── assets/demo.gif
 ```
 
@@ -173,7 +197,12 @@ songli/
 python -m unittest discover tests -v
 ```
 
-28 个单测:需求解析、预算区间、拆分总额、池数量与三类过滤、禁忌命中、三档方案与品类去重、金额剥离、理由校验拒绝未知礼物与自造价格、离线结构、记录与撞礼。CI 在 3.10/3.11/3.12 上跑。
+59 条测试,分两层:
+
+- **28 条单测**(`tests/test_songli.py`):需求解析、预算区间、拆分总额、池数量与三类过滤、禁忌命中、三档方案与品类去重、金额剥离、理由校验、离线结构、记录与撞礼。
+- **31 条集成**(`tests/test_integration.py`):真起 `http.server` 用原始 socket 发请求(页面、`/api/plan`、`/api/history`、404、截断 JSON),真起子进程跑 `plan / check / pool / history`,四份示例的结论逐条钉住。
+
+`docs/regression-map.md` 记着 #3–#7 各自对应哪条测试、为什么这么对。CI 在 3.10/3.11/3.12 上跑,ruff 干净,打 `v*` tag 时构建多架构镜像推 GHCR。
 
 ## 👤 作者
 

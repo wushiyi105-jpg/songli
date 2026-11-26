@@ -36,6 +36,10 @@ Docker:
 ```bash
 docker build -t songli .
 docker run -p 8000:8000 songli
+
+# or pull the multi-arch image (amd64 / arm64)
+docker pull ghcr.io/wushiyi105-jpg/songli:latest
+docker run -p 8000:8000 ghcr.io/wushiyi105-jpg/songli:latest
 ```
 
 ## 🤔 Why not just ask a general LLM
@@ -54,6 +58,23 @@ A general model says "tea is nice for an elder, 500 gets you a good box". It wil
 - **Client holiday**: budget 800, avoid cash, alcohol and luxury, business-appropriate lines.
 - **Newborn**: no plush or hard toys; cotton items with material confirmed.
 - **Hospital visit**: ask the nurses' station about flowers first, then decide on fruit.
+
+## 📂 Real examples
+
+`examples/` holds 4 real briefs and their outputs, with sources in `cases.json`:
+
+| Input | Source | What it should show |
+|---|---|---|
+| case-01 | Family group chat, grandmother's birthday, budget written as 「五百」 | Chinese numerals must read as 500; 「外婆」 maps to elder; "she doesn't drink" hits the alcohol taboo |
+| case-02 | Colleague announcing a housewarming in the team chat | Clock and knife taboos both hit; no clock or knife in any of the three schemes |
+| case-03 | Hospital visit arrangement, budget 300, wanted to bring flowers | Split totals 300; 「舅舅」 recognised as an elder |
+| case-04 | Cousin announcing a full-moon party, plush allergy mentioned | The pool has no full-moon category yet; fall back by relation and say so in Risks |
+
+```bash
+for f in examples/case-*.txt; do python -m songli --mock plan --file "$f"; done
+```
+
+Archived outputs live in `examples/out/case-01..04.md`, byte-identical to what the CLI prints.
 
 ## 🗺 Roadmap
 
@@ -163,7 +184,10 @@ songli/
 │   └── web.py      # single page + JSON API
 ├── data/gifts.json     # 200-item pool
 ├── data/taboos.json    # 31 taboo rules
-├── tests/test_songli.py
+├── examples/           # 4 real briefs + archived output (sources in cases.json)
+├── docs/regression-map.md  # issue → test name
+├── tests/test_songli.py       # 28 unit tests
+├── tests/test_integration.py  # 31 integration tests (HTTP / CLI / example verdicts)
 └── assets/demo.gif
 ```
 
@@ -173,7 +197,12 @@ songli/
 python -m unittest discover tests -v
 ```
 
-28 tests: brief parsing, budget ranges, split totals, pool size and three filters, taboo hits, three bands with distinct categories, money stripping, reason guard rejecting unknown gifts and invented prices, offline shape, history and duplicate exclusion. CI runs on 3.10/3.11/3.12.
+59 tests in two layers:
+
+- **28 unit** (`tests/test_songli.py`): brief parsing, budget ranges, split totals, pool size and three filters, taboo hits, three bands with distinct categories, money stripping, reason guard, offline shape, history and duplicate exclusion.
+- **31 integration** (`tests/test_integration.py`): a real `http.server` queried over raw sockets (page, `/api/plan`, `/api/history`, 404, truncated JSON), real subprocesses for `plan / check / pool / history`, and the verdicts of all four examples pinned one by one.
+
+`docs/regression-map.md` records which test guards issues #3–#7 and why. CI runs on 3.10/3.11/3.12, ruff is clean, and pushing a `v*` tag builds a multi-arch image to GHCR.
 
 ## 👤 Author
 

@@ -38,7 +38,7 @@ docker build -t songli .
 docker run -p 8000:8000 songli
 ```
 
-## 🤔 为什么不能直接问模型
+## 🤔 为什么不用通用大模型直接问
 
 通用模型会说「送长辈茶叶不错,预算 500 可以买盒好茶」。它不会告诉你 500 里该留多少给花和卡,也不会记得你去年送过茶叶。差别在四点:
 
@@ -103,7 +103,7 @@ python -m songli --json plan --text "送朋友,生日,预算 200"
 python -m songli --mock plan --text "送朋友,生日,预算 200"
 ```
 
-## 🔌 模型配置
+## 🔌 模型接入
 
 兼容 **OpenAI `/chat/completions`** 的任意服务:
 
@@ -179,6 +179,6 @@ python -m unittest discover tests -v
 
 shiyi · GitHub [@wushiyi105-jpg](https://github.com/wushiyi105-jpg) · [wushiyi105@gmail.com](mailto:wushiyi105@gmail.com)
 
-## 📄 许可
+## 📄 License
 
 [MIT](./LICENSE)

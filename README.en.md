@@ -38,7 +38,7 @@ docker build -t songli .
 docker run -p 8000:8000 songli
 ```
 
-## 🤔 Why not just ask a model
+## 🤔 Why not just ask a general LLM
 
 A general model says "tea is nice for an elder, 500 gets you a good box". It will not tell you how much of 500 belongs to flowers and a card, and it will not remember you gave tea last year. Four differences:
 

@@ -12,7 +12,7 @@ PAGE = """<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>送礼 · 人情方案</title>
+<title>送礼 · 这份礼怎么选</title>
 <style>
   :root{--bg:#fbf8f4;--card:#fff;--ink:#3a2f28;--muted:#7d6d61;--accent:#a8552f;--soft:#fbe9df;
         --line:#eee1d8;--red:#b42318;--green:#067647;--amber:#b54708;--radius:16px}
@@ -36,14 +36,75 @@ PAGE = """<!doctype html>
   .box{background:#fffdfb;border-radius:10px;padding:12px 14px;margin:8px 0;font-size:14px;line-height:1.8}
   ul{margin:6px 0 0 18px;padding:0}li{margin:6px 0;font-size:14px}
   .warn{color:var(--amber)}.bad{color:var(--red)}.ok{color:var(--green)}
+
+:root{--maxw:900px;--bg:#f4efe4;--card:#fffdf7;--ink:#3b2d2a;--text:#3b2d2a;--dim:#7b6a61;--line:#dfd2c1;--accent:#a34c57;--muted:#7b6a61}
+.wrap{max-width:900px}
+body{background:#f4efe4;color:#3b2d2a;font-family:"Songti SC","SimSun",Georgia,serif}
+h1{color:#3b2d2a}
+header{max-width:900px;margin:0 auto}
+input,textarea,select{background:#fff;color:#3b2d2a;border-color:#dfd2c1;border-radius:2px}
+button:not(.ghost):not(.tab){background:#a34c57;color:#fff;border-radius:2px}
+button.ghost{background:transparent!important;color:#a34c57!important;border:1px solid #dfd2c1!important}
+h2,h3{color:#a34c57}
+pre{background:#fafaf6;color:#3b2d2a;border-color:#dfd2c1}
+.item,.card{border-color:#dfd2c1;background:#fffdf7}
+.k,.empty,.hint{color:#7b6a61}
+
+h1{font-size:clamp(31px,5vw,39px);line-height:1.26}
+.prod{display:block;font-size:11px;line-height:1.4;letter-spacing:.18em;font-weight:650;margin-bottom:8px;opacity:.72}
+.lede,.sub{max-width:62ch;line-height:1.75}
+.route{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin:16px auto 20px;border:1px solid var(--line);background:var(--line);max-width:var(--maxw)}
+.route span{padding:11px 13px;background:var(--card);font-size:12px;line-height:1.5}
+.route b{display:block;font-size:10px;letter-spacing:.1em;margin-bottom:3px;opacity:.66}
+button{min-height:46px}
+input,select{min-height:44px}
+pre{white-space:pre-wrap}
+@media(max-width:680px){
+  .wrap{padding:20px 16px 56px}
+  .route{grid-template-columns:1fr}
+  h1{font-size:30px!important}
+  .row>div{min-width:100%!important}
+  button{width:100%}
+}
+
+header{padding:10px 0 20px;border-bottom:1px solid #bda990}
+header h1{font-size:40px;line-height:1.26}
+header p{color:#746359;font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:14px}
+.card{background:#fffdf7;border:1px solid #dfd2c1;border-top:3px solid #a34c57;border-radius:1px;box-shadow:none}
+button{background:#a34c57;border-radius:1px;letter-spacing:.04em}
+button:hover{background:#8b3e49}
+input,textarea,select{background:#fffefa;border-color:#d8c8b5;border-radius:1px}
+input:focus,textarea:focus,select:focus{border-color:#a34c57;box-shadow:0 0 0 2px #ead6d8}
+.item,.offer,.plan{border-left:3px solid #a34c57;background:#fffaf4}
+h3{color:#a34c57}
+
+
+/* mobile-32 */
+
+@media(max-width:760px){
+  main{grid-template-columns:1fr!important}
+  aside{border-right:0!important;border-bottom:1px solid #dfd2c1;width:auto!important}
+  section{padding:16px!important}
+  .row{flex-wrap:wrap!important}
+  .row>div{min-width:100%!important}
+  h1{font-size:30px!important}
+  .route{grid-template-columns:1fr!important}
+  button{min-height:48px}
+  pre{overflow-x:auto}
+}
+
+/* mobile-height */
+@media(max-width:760px){main{min-height:auto!important}aside{min-height:0!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>送礼 · 人情方案<span class="badge" id="badge">…</span></h1>
-    <p>说清楚送给谁、什么场合、多少预算:三套能落地的方案,连同避雷和话术。</p>
+    <h1><span class="prod">送礼</span>这份礼，怎么选不踩雷 <span class="badge" id="badge">…</span></h1>
+    <p class="lede">给预算和时间都有限的人：先记关系、场合、避讳和最迟到手日，再给三个理由不同的候选。往年送过什么、会不会迟到，都能一票否决。</p>
   </header>
+  <div class="route" aria-label="任务步骤"><span><b>01</b>记关系和预算</span><span><b>02</b>出三个候选</span><span><b>03</b>核对往年与到货</span></div>
+
   <div class="card">
     <label>送礼需求</label>
     <textarea id="text" rows="5" placeholder="送长辈,生日,预算 500,对方喜欢喝茶,不喝酒"></textarea>
